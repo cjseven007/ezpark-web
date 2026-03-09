@@ -18,13 +18,11 @@ const items = [
 export default function AppSidebar() {
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center gap-3 px-6 py-5">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white">
-          <MapPinned className="h-5 w-5" />
-        </div>
+      <div className="flex shrink-0 gap-3 px-6 py-5">
+          <img src="/ezpark_logo.svg" alt="EZPark Logo" className="flex h-15 w-15 items-center justify-center rounded-xl" />
         <div>
-          <p className="font-semibold text-slate-900">EZPark Admin</p>
-          <p className="text-xs text-slate-500">Dashboard</p>
+          <p className="font-semibold text-xl text-slate-900">EZPark Admin</p>
+          <p className="text-sm text-slate-500">Dashboard</p>
         </div>
       </div>
 
@@ -54,14 +52,14 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      <div className="shrink-0 p-4">
+      {/* <div className="shrink-0 p-4">
         <div className="rounded-2xl border bg-slate-50 p-4">
           <p className="text-sm font-medium text-slate-900">Next step</p>
           <p className="mt-1 text-xs text-slate-500">
             Use the Data Annotator page later to draw and manage parking slot boxes.
           </p>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
