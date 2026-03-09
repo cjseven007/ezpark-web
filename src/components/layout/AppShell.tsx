@@ -26,10 +26,10 @@ export default function AppShell({ children }: AppShellProps) {
           <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b bg-white/95 px-4 backdrop-blur lg:hidden">
             <div className="flex items-center gap-3">
               <Sheet>
-                <SheetTrigger>
-                  <Button variant="outline" size="icon">
-                    <Menu className="h-5 w-5" />
-                  </Button>
+                <SheetTrigger
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background text-sm shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <Menu className="h-5 w-5" />
                 </SheetTrigger>
 
                 <SheetContent side="left" className="w-72 p-0">
