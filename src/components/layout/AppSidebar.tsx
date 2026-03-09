@@ -1,4 +1,4 @@
-import { MapPinned, Home, ScanSearch } from "lucide-react";
+import { Home, ScanSearch } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Separator } from "../ui/separator";
 
