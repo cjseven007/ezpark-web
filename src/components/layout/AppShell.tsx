@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Menu } from "lucide-react";
 import AppSidebar from "./AppSidebar";
-import { Button } from "../ui/button";
 import {
   Sheet,
   SheetContent,
