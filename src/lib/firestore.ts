@@ -11,10 +11,12 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import geohash from "ngeohash";
 import { db } from "./firebase";
-import type{
+import type {
+  AnnotatedSlotPolygon,
   ParkingArea,
   ParkingAreaFormValues,
   ParkingSlot,
@@ -51,6 +53,7 @@ export async function listParkingAreas(): Promise<ParkingArea[]> {
       availableCount: data?.availableCount ?? 0,
       imageWidth: data?.layout?.imageWidth ?? 1920,
       imageHeight: data?.layout?.imageHeight ?? 1080,
+      parkingFee: Number(data?.parkingFee ?? 0),
     };
   });
 }
@@ -74,6 +77,7 @@ export async function getParkingArea(areaId: string): Promise<ParkingArea | null
     availableCount: data?.availableCount ?? 0,
     imageWidth: data?.layout?.imageWidth ?? 1920,
     imageHeight: data?.layout?.imageHeight ?? 1080,
+    parkingFee: Number(data?.parkingFee ?? 0),
   };
 }
 
@@ -86,6 +90,7 @@ export async function createParkingArea(values: ParkingAreaFormValues) {
     },
     capacity: 0,
     availableCount: 0,
+    parkingFee: Number(values.parkingFee),
     layout: {
       imageWidth: values.imageWidth,
       imageHeight: values.imageHeight,
@@ -104,6 +109,7 @@ export async function updateParkingArea(areaId: string, values: ParkingAreaFormV
       geopoint: new GeoPoint(values.latitude, values.longitude),
       geohash: values.geohash || geohash.encode(values.latitude, values.longitude),
     },
+    parkingFee: Number(values.parkingFee),
     layout: {
       imageWidth: values.imageWidth,
       imageHeight: values.imageHeight,
@@ -215,5 +221,71 @@ export async function createOrReplaceSlotDirectly(
     { merge: true }
   );
 
+  await recalculateAreaCounts(areaId);
+}
+
+// Slots logic for annotation
+export async function hasExistingSlots(areaId: string): Promise<boolean> {
+  const snap = await getDocs(collection(db, PARKING_AREAS, areaId, SLOTS));
+  return !snap.empty;
+}
+
+export async function deleteAllSlots(areaId: string) {
+  const slotsRef = collection(db, PARKING_AREAS, areaId, SLOTS);
+  const snap = await getDocs(slotsRef);
+
+  const batch = writeBatch(db);
+
+  snap.docs.forEach((d) => {
+    batch.delete(doc(db, PARKING_AREAS, areaId, SLOTS, d.id));
+  });
+
+  await batch.commit();
+
+  await recalculateAreaCounts(areaId);
+}
+
+export async function replaceAllSlotsFromAnnotation(
+  areaId: string,
+  polygons: AnnotatedSlotPolygon[]
+) {
+  const slotsRef = collection(db, PARKING_AREAS, areaId, SLOTS);
+  const existing = await getDocs(slotsRef);
+
+  const batch = writeBatch(db);
+
+  existing.docs.forEach((d) => {
+    batch.delete(doc(db, PARKING_AREAS, areaId, SLOTS, d.id));
+  });
+
+  polygons.forEach((polygon, index) => {
+    const xs = polygon.points.map((p) => p.x);
+    const ys = polygon.points.map((p) => p.y);
+
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    const slotRef = doc(collection(db, PARKING_AREAS, areaId, SLOTS));
+
+    batch.set(slotRef, {
+      label: `Slot ${index + 1}`,
+      isAvailable: true,
+      occupied: null,
+      confidence: null,
+      bbox: {
+        x: minX,
+        y: minY,
+        w: maxX - minX,
+        h: maxY - minY,
+      },
+      points: polygon.points,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  await batch.commit();
   await recalculateAreaCounts(areaId);
 }

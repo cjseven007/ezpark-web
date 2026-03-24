@@ -19,12 +19,67 @@ function getSlotFill(slot: ParkingSlot) {
   return "rgba(245, 158, 11, 0.18)";
 }
 
+function getSlotPolygonPoints(slot: ParkingSlot): Array<{ x: number; y: number }> {
+  if (slot.points && slot.points.length >= 4) {
+    return slot.points;
+  }
+
+  return [
+    { x: slot.x, y: slot.y },
+    { x: slot.x + slot.w, y: slot.y },
+    { x: slot.x + slot.w, y: slot.y + slot.h },
+    { x: slot.x, y: slot.y + slot.h },
+  ];
+}
+
+function getCanvasBounds(
+  slots: ParkingSlot[],
+  imageWidth: number,
+  imageHeight: number,
+  padding = 40
+) {
+  if (slots.length === 0) {
+    return {
+      minX: 0,
+      minY: 0,
+      viewWidth: imageWidth,
+      viewHeight: imageHeight,
+    };
+  }
+
+  const allPoints = slots.flatMap(getSlotPolygonPoints);
+
+  const rawMinX = Math.min(...allPoints.map((p) => p.x));
+  const rawMinY = Math.min(...allPoints.map((p) => p.y));
+  const rawMaxX = Math.max(...allPoints.map((p) => p.x));
+  const rawMaxY = Math.max(...allPoints.map((p) => p.y));
+
+  const minX = Math.max(0, rawMinX - padding);
+  const minY = Math.max(0, rawMinY - padding);
+  const maxX = Math.min(imageWidth, rawMaxX + padding);
+  const maxY = Math.min(imageHeight, rawMaxY + padding);
+
+  return {
+    minX,
+    minY,
+    viewWidth: Math.max(1, maxX - minX),
+    viewHeight: Math.max(1, maxY - minY),
+  };
+}
+
 export default function SlotCanvasPreview({
   slots,
   imageWidth,
   imageHeight,
   className = "",
 }: SlotCanvasPreviewProps) {
+  const { minX, minY, viewWidth, viewHeight } = getCanvasBounds(
+    slots,
+    imageWidth,
+    imageHeight,
+    60
+  );
+
   return (
     <div className={`overflow-hidden rounded-2xl border bg-slate-950 ${className}`}>
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
@@ -35,24 +90,25 @@ export default function SlotCanvasPreview({
           </p>
         </div>
         <div className="text-xs text-slate-400">
-          {imageWidth} × {imageHeight}
+          {Math.round(viewWidth)} × {Math.round(viewHeight)}
         </div>
       </div>
 
       <div className="relative aspect-video w-full bg-[radial-gradient(circle_at_center,_#1e293b,_#020617)]">
         <svg
-          viewBox={`0 0 ${imageWidth} ${imageHeight}`}
+          viewBox={`${minX} ${minY} ${viewWidth} ${viewHeight}`}
           className="h-full w-full"
           preserveAspectRatio="xMidYMid meet"
         >
           {slots.map((slot) => {
-            const points =
-              slot.points && slot.points.length >= 4
-                ? slot.points.map((p) => `${p.x},${p.y}`).join(" ")
-                : `${slot.x},${slot.y} ${slot.x + slot.w},${slot.y} ${slot.x + slot.w},${slot.y + slot.h} ${slot.x},${slot.y + slot.h}`;
+            const polygonPoints = getSlotPolygonPoints(slot);
+            const points = polygonPoints.map((p) => `${p.x},${p.y}`).join(" ");
 
-            const labelX = slot.x + 8;
-            const labelY = slot.y + 22;
+            const minPointX = Math.min(...polygonPoints.map((p) => p.x));
+            const minPointY = Math.min(...polygonPoints.map((p) => p.y));
+
+            const labelX = minPointX + 8;
+            const labelY = minPointY + 22;
 
             return (
               <g key={slot.id}>
@@ -61,7 +117,6 @@ export default function SlotCanvasPreview({
                   fill={getSlotFill(slot)}
                   stroke={getSlotStroke(slot)}
                   strokeWidth={4}
-                  rx={8}
                 />
                 <text
                   x={labelX}

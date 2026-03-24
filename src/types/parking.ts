@@ -8,6 +8,7 @@ export interface ParkingArea {
   availableCount: number;
   imageWidth: number;
   imageHeight: number;
+  parkingFee: number;
 }
 
 export interface ParkingSlot {
@@ -30,6 +31,7 @@ export interface ParkingAreaFormValues {
   geohash: string;
   imageWidth: number;
   imageHeight: number;
+  parkingFee: number;
 }
 
 export interface ParkingSlotFormValues {
@@ -41,4 +43,9 @@ export interface ParkingSlotFormValues {
   y: number;
   w: number;
   h: number;
+}
+
+export interface AnnotatedSlotPolygon {
+  id: string;
+  points: Array<{ x: number; y: number }>;
 }

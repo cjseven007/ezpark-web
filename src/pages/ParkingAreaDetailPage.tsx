@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
+import { deleteAllSlots } from "../lib/firestore";
 
 export default function ParkingAreaDetailPage() {
   const { areaId = "" } = useParams();
@@ -44,6 +45,24 @@ export default function ParkingAreaDetailPage() {
   const [jsonLoading, setJsonLoading] = useState(false);
   const [inferenceLoading, setInferenceLoading] = useState(false);
   const [deleteSlotLoading, setDeleteSlotLoading] = useState(false);
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
+
+  async function handleDeleteAllSlots() {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete all slots for this parking area?"
+    );
+    if (!confirmed) return;
+
+    setDeleteAllLoading(true);
+    try {
+      await deleteAllSlots(areaId);
+      await loadData();
+    } catch (error: any) {
+      alert(error?.message || "Failed to delete all slots");
+    } finally {
+      setDeleteAllLoading(false);
+    }
+  }
 
   async function loadData() {
     setLoading(true);
@@ -177,6 +196,7 @@ export default function ParkingAreaDetailPage() {
               Available: {area.availableCount}
             </Badge>
             <Badge variant="destructive">Occupied: {occupiedCount}</Badge>
+            <Badge variant="outline">Fee: RM {area.parkingFee.toFixed(2)}</Badge>
           </div>
         </div>
       </div>
@@ -239,6 +259,14 @@ export default function ParkingAreaDetailPage() {
               <CarFront className="h-4 w-4" />
               {slots.length} slots
             </div>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteAllSlots}
+              disabled={deleteAllLoading || slots.length === 0}
+            >
+              {deleteAllLoading ? "Deleting..." : "Delete All Slots"}
+            </Button>
           </CardHeader>
 
           <CardContent>

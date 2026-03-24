@@ -30,6 +30,7 @@ export default function ParkingAreaModal({
   const [name, setName] = useState("");
   const [imageWidth, setImageWidth] = useState(1920);
   const [imageHeight, setImageHeight] = useState(1080);
+  const [parkingFee, setParkingFee] = useState(0);
   const [position, setPosition] = useState<{ lat: number; lng: number } | undefined>(
     undefined
   );
@@ -40,6 +41,7 @@ export default function ParkingAreaModal({
       setName(initialData.name);
       setImageWidth(initialData.imageWidth);
       setImageHeight(initialData.imageHeight);
+      setParkingFee(initialData.parkingFee ?? 0);
       setPosition({
         lat: initialData.latitude,
         lng: initialData.longitude,
@@ -48,6 +50,7 @@ export default function ParkingAreaModal({
       setName("");
       setImageWidth(1920);
       setImageHeight(1080);
+      setParkingFee(0);
       setPosition(undefined);
     }
   }, [initialData, open]);
@@ -71,6 +74,7 @@ export default function ParkingAreaModal({
         geohash: computedGeohash,
         imageWidth,
         imageHeight,
+        parkingFee,
       });
 
       onClose();
@@ -91,7 +95,7 @@ export default function ParkingAreaModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-2">
               <Label>Area Name</Label>
               <Input
@@ -121,12 +125,25 @@ export default function ParkingAreaModal({
                 disabled={loading}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>Parking Fee</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={parkingFee}
+                onChange={(e) => setParkingFee(Number(e.target.value))}
+                disabled={loading}
+                required
+              />
+            </div>
           </div>
 
           <MapPicker value={position} onChange={setPosition} />
 
           {position && (
-            <Card className="grid gap-4 bg-slate-50 p-4 md:grid-cols-3">
+            <Card className="grid gap-4 bg-slate-50 p-4 md:grid-cols-4">
               <div>
                 <p className="text-xs text-slate-500">Latitude</p>
                 <p className="text-sm font-medium text-slate-900">{position.lat}</p>
@@ -139,6 +156,12 @@ export default function ParkingAreaModal({
                 <p className="text-xs text-slate-500">Geohash</p>
                 <p className="text-sm font-medium text-slate-900">
                   {geohash.encode(position.lat, position.lng)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Parking Fee</p>
+                <p className="text-sm font-medium text-slate-900">
+                  RM {parkingFee.toFixed(2)}
                 </p>
               </div>
             </Card>
