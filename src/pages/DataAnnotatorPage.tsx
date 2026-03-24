@@ -22,7 +22,7 @@ type SourceType = "image" | "video" | null;
 
 export default function DataAnnotatorPage() {
   const [sourceType, setSourceType] = useState<SourceType>(null);
-  const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [, setSourceFile] = useState<File | null>(null);
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
 
   const [frameTime, setFrameTime] = useState(0);
@@ -117,7 +117,6 @@ export default function DataAnnotatorPage() {
   function getImageCoordinates(
     e: React.MouseEvent<HTMLDivElement, MouseEvent>
   ): { x: number; y: number } | null {
-    const container = e.currentTarget;
     const img = imageRef.current;
     if (!img) return null;
 
